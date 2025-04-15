@@ -1,0 +1,7 @@
+- esta logando com a pagina de locador ou locatario errado
+- adicionar opcao de remover apartamento listado
+- adicionar foto aos apartamentos
+- busca por cidade n esta funcionando
+- editar imovel listado
+- melhorar experiencia do aluguel
+- melhorar avisos na tela, n ser um alert
