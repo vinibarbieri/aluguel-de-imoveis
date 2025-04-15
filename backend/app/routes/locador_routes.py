@@ -1,124 +1,98 @@
-# backend/routes/locador_routes.py
+# app/routes/locador_routes.py
 
 from flask import Blueprint, request, jsonify
-from datetime import datetime
-from app import db
 from app.models.property import Property
 from app.models.reservation import Reservation
-from app.models.user import User
+from app.models.review import Review
+from app import db
+from datetime import datetime
 
 locador_bp = Blueprint('locador', __name__)
 
-def parse_date(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%d").date()
-
-@locador_bp.route('/properties', methods=['POST'])
+# Criar imóvel
+@locador_bp.route("/properties", methods=["POST"])
 def create_property():
-    data = request.json
-    owner_id = data.get('owner_id')
-
-    owner = User.query.get(owner_id)
-    if not owner or owner.user_type != 'locador':
-        return jsonify({'error': 'Usuário inválido'}), 403
-
+    data = request.get_json()
     property = Property(
-        title=data['title'],
-        description=data['description'],
-        address=data['address'],
-        price_per_day=data['price_per_day'],
-        available_from=parse_date(data['available_from']),
-        available_until=parse_date(data['available_until']),
-        owner_id=owner_id
+        title=data["title"],
+        description=data["description"],
+        address=data["address"],
+        price_per_day=data["price_per_day"],
+        available_from=datetime.strptime(data["available_from"], "%Y-%m-%d").date(),
+        available_until=datetime.strptime(data["available_until"], "%Y-%m-%d").date(),
+        owner_id=data["owner_id"],
+        image_url=data.get("image_url")  # Novo campo
     )
-
     db.session.add(property)
     db.session.commit()
+    return jsonify({"message": "Imóvel cadastrado"}), 201
 
-    return jsonify({'message': 'Imóvel cadastrado com sucesso', 'property_id': property.id}), 201
-
-
-@locador_bp.route('/properties/<int:owner_id>', methods=['GET'])
-def list_properties(owner_id):
+# Listar imóveis do locador com avaliação média e nº de reservas
+@locador_bp.route("/properties/<int:owner_id>", methods=["GET"])
+def get_properties(owner_id):
     properties = Property.query.filter_by(owner_id=owner_id).all()
-    return jsonify([{
-        'id': p.id,
-        'title': p.title,
-        'price_per_day': p.price_per_day,
-        'available_from': p.available_from.isoformat(),
-        'available_until': p.available_until.isoformat()
-    } for p in properties])
+    result = []
+    for p in properties:
+        reviews = [r.review for r in p.reservations if r.review]
+        avg_rating = round(sum(rv.rating for rv in reviews) / len(reviews), 1) if reviews else None
+        result.append({
+            "id": p.id,
+            "title": p.title,
+            "description": p.description,
+            "address": p.address,
+            "price_per_day": p.price_per_day,
+            "available_from": p.available_from.isoformat(),
+            "available_until": p.available_until.isoformat(),
+            "image_url": p.image_url,
+            "average_rating": avg_rating,
+            "total_reservas": len(p.reservations)
+        })
+    return jsonify(result)
 
-
-@locador_bp.route('/property/<int:property_id>', methods=['PUT'])
-def edit_property(property_id):
-    data = request.json
-    property = Property.query.get(property_id)
-
-    if not property:
-        return jsonify({'error': 'Imóvel não encontrado'}), 404
-
-    property.title = data.get('title', property.title)
-    property.description = data.get('description', property.description)
-    property.address = data.get('address', property.address)
-    property.price_per_day = data.get('price_per_day', property.price_per_day)
-
-    if 'available_from' in data:
-        property.available_from = parse_date(data['available_from'])
-    if 'available_until' in data:
-        property.available_until = parse_date(data['available_until'])
-
+# Atualizar imóvel
+@locador_bp.route("/property/<int:id>", methods=["PUT"])
+def update_property(id):
+    data = request.get_json()
+    p = Property.query.get_or_404(id)
+    p.title = data["title"]
+    p.description = data["description"]
+    p.address = data["address"]
+    p.price_per_day = data["price_per_day"]
+    p.available_from = datetime.strptime(data["available_from"], "%Y-%m-%d").date()
+    p.available_until = datetime.strptime(data["available_until"], "%Y-%m-%d").date()
+    p.image_url = data.get("image_url")
     db.session.commit()
-    return jsonify({'message': 'Imóvel atualizado com sucesso'})
+    return jsonify({"message": "Imóvel atualizado"})
 
-
-@locador_bp.route('/reservations/<int:owner_id>', methods=['GET'])
-def list_reservations(owner_id):
-    properties = Property.query.filter_by(owner_id=owner_id).all()
-    property_ids = [p.id for p in properties]
-
-    reservations = Reservation.query.filter(Reservation.property_id.in_(property_ids)).all()
-
-    return jsonify([{
-        'reservation_id': r.id,
-        'property_id': r.property_id,
-        'renter_name': r.renter.name,
-        'start_date': r.start_date.isoformat(),
-        'end_date': r.end_date.isoformat(),
-        'approved': r.approved
-    } for r in reservations])
-
-
-@locador_bp.route('/reservation/<int:reservation_id>', methods=['PUT'])
-def update_reservation_status(reservation_id):
-    data = request.json
-    approved = data.get('approved')  # True ou False
-
-    reservation = Reservation.query.get(reservation_id)
-    if reservation is None:
-        return jsonify({'error': 'Reserva não encontrada'}), 404
-
-    reservation.approved = approved
+# Deletar imóvel
+@locador_bp.route("/property/<int:id>", methods=["DELETE"])
+def delete_property(id):
+    p = Property.query.get_or_404(id)
+    db.session.delete(p)
     db.session.commit()
+    return jsonify({"message": "Imóvel removido"})
 
-    return jsonify({'message': 'Status da reserva atualizado'})
+# Reservas recebidas
+@locador_bp.route("/reservations/<int:owner_id>", methods=["GET"])
+def get_reservations(owner_id):
+    reservations = Reservation.query.join(Property).filter(Property.owner_id == owner_id).all()
+    result = []
+    for r in reservations:
+        result.append({
+            "reservation_id": r.id,
+            "property_id": r.property_id,
+            "renter_name": r.renter.name,
+            "start_date": r.start_date.isoformat(),
+            "end_date": r.end_date.isoformat(),
+            "approved": r.approved
+        })
+    return jsonify(result)
 
-
-@locador_bp.route('/reviews/<int:owner_id>', methods=['GET'])
-def get_reviews_by_owner(owner_id):
-    from models.review import Review  # importar aqui para evitar ciclos
-
-    # Pega todos os imóveis do locador
-    properties = Property.query.filter_by(owner_id=owner_id).all()
-    property_ids = [p.id for p in properties]
-
-    # Pega todas as reservas desses imóveis que têm review
-    reservations = Reservation.query.filter(Reservation.property_id.in_(property_ids)).all()
-    reviews = [r.review for r in reservations if r.review]
-
-    return jsonify([{
-        'property_id': rv.reservation.property.id,
-        'property_title': rv.reservation.property.title,
-        'renter_name': rv.reservation.renter.name,
-        'rating': rv.rating,
-        'comment': rv.comment
-    } for rv in reviews])
+# Aprovar ou recusar reserva
+@locador_bp.route("/reservation/<int:id>", methods=["PUT"])
+def update_reservation(id):
+    data = request.get_json()
+    r = Reservation.query.get_or_404(id)
+    r.approved = data["approved"]
+    db.session.commit()
+    return jsonify({"message": "Reserva atualizada"})
