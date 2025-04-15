@@ -1,5 +1,5 @@
 from app import db
-from models.review import Review  
+from app.models.review import Review  
 
 class Reservation(db.Model):
     id = db.Column(db.Integer, primary_key=True)

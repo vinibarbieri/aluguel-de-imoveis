@@ -3,9 +3,9 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from app import db
-from models.property import Property
-from models.reservation import Reservation
-from models.user import User
+from app.models.property import Property
+from app.models.reservation import Reservation
+from app.models.user import User
 
 locador_bp = Blueprint('locador', __name__)
 
