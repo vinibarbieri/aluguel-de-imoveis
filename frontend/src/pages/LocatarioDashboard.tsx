@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import GooglePlacesAutocomplete from "react-google-places-autocomplete";
+import GooglePlacesAutocomplete, {geocodeByPlaceId} from "react-google-places-autocomplete";
 import { getLoggedUser, logout } from "../utils/auth";
+import EditUser from "../components/EditUser";
 
 interface Property {
   id: number;
@@ -30,8 +31,8 @@ interface Reservation {
 }
 
 export default function LocatarioDashboard() {
-  const user = getLoggedUser();
-  const [tab, setTab] = useState<"buscar" | "reservas">("buscar");
+  const [user, setUser] = useState(getLoggedUser());
+  const [tab, setTab] = useState<"buscar" | "reservas" | "editUser">("buscar");
 
   const [searchCity, setSearchCity] = useState<string>("");
   const [minPrice, setMinPrice] = useState("");
@@ -134,6 +135,14 @@ export default function LocatarioDashboard() {
             Minhas Reservas
           </button>
         </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${tab === "editUser" ? "active" : ""}`}
+            onClick={() => setTab("editUser")}
+          >
+            Editar Perfil
+          </button>
+        </li>
       </ul>
 
 
@@ -145,12 +154,25 @@ export default function LocatarioDashboard() {
             <GooglePlacesAutocomplete
               apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
               selectProps={{
-                placeholder: "Digite a cidade ou bairro...",
-                onChange: (value: any) => {
-                  setSearchCity(value.label);
+                placeholder: 'Buscar por cidade...',
+                onChange: async (value: any) => {
+                  const placeId = value.value.place_id;
+                  const results = await geocodeByPlaceId(placeId);
+
+                  if (results && results[0]) {
+                    const addressComponents = results[0].address_components;
+
+                    const getComponent = (type: string) =>
+                      addressComponents.find((comp) => comp.types.includes(type))?.long_name || '';
+
+                    const city = getComponent("administrative_area_level_2");
+                    setSearchCity(city); // ✅ só envia o nome da cidade, ex: "São Paulo"
+
+                  }
                 },
               }}
             />
+
 
             <div className="row mt-3">
               <div className="col-md-3">
@@ -258,6 +280,19 @@ export default function LocatarioDashboard() {
               </div>
             ))}
           </>
+        )}
+
+
+        {tab === "editUser" && (
+          <div>
+            <h4>Editar Perfil</h4>
+            <EditUser
+              userId={user.id}
+              currentName={user.name}
+              currentEmail={user.email}
+              onUserUpdated={(updatedUser) => setUser(updatedUser)}
+            />
+          </div>
         )}
         </div>
       </div>

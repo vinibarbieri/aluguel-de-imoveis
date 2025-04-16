@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { getLoggedUser, logout } from "../utils/auth";
-import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
+import GooglePlacesAutocomplete, {geocodeByPlaceId} from 'react-google-places-autocomplete';
+import EditUser from "../components/EditUser";
 
 
 interface Property {
@@ -28,15 +29,16 @@ interface Reservation {
   }
   
 export default function LocadorDashboard() {
-  const user = getLoggedUser();
+  const [user, setUser] = useState(getLoggedUser());
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [tab, setTab] = useState<"list" | "create" | "reservas">("list");
+  const [tab, setTab] = useState<"list" | "create" | "reservas" | "editUser">("list");
   const [properties, setProperties] = useState<Property[]>([]);
   const [form, setForm] = useState({
     id: null,
     title: "",
     description: "",
     address: "",
+    city: "",
     price_per_day: "",
     available_from: "",
     available_until: "",
@@ -89,6 +91,7 @@ export default function LocadorDashboard() {
       title: "",
       description: "",
       address: "",
+      city: "",
       price_per_day: "",
       available_from: "",
       available_until: "",
@@ -102,6 +105,7 @@ export default function LocadorDashboard() {
           title: p.title,
           description: p.description,
           address: p.address,
+          city: p.city,
           price_per_day: p.price_per_day.toString(),
           available_from: p.available_from,
           available_until: p.available_until,
@@ -135,6 +139,7 @@ export default function LocadorDashboard() {
     }
   };
   
+  console.log("Usuário logado:", user);
 
   return (
     <div className="container mt-4">
@@ -159,6 +164,15 @@ export default function LocadorDashboard() {
                 Reservas Recebidas
             </button>
         </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${tab === "editUser" ? "active" : ""}`}
+            onClick={() => setTab("editUser")}
+          >
+            Editar Perfil
+          </button>
+        </li>
+
       </ul>
 
       <div className="mt-4">
@@ -198,20 +212,39 @@ export default function LocadorDashboard() {
             <input className="form-control mb-2" placeholder="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             <textarea className="form-control mb-2" placeholder="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             <GooglePlacesAutocomplete
-                apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-                selectProps={{
-                    placeholder: 'Buscar endereço...',
-                    onChange: (value: any) => {
-                    setForm({ ...form, address: value.label });
-                    },
-                    styles: {
-                    control: (base) => ({
-                        ...base,
-                        marginBottom: '0.5rem'
-                    })
-                    }
-                }}
-            />       
+              apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+              selectProps={{
+                placeholder: 'Buscar endereço...',
+                onChange: async (value: any) => {
+                  const placeId = value.value.place_id;
+                  const results = await geocodeByPlaceId(placeId);
+
+                  if (results && results[0]) {
+                    const addressComponents = results[0].address_components;
+
+                    const getComponent = (type: string) =>
+                      addressComponents.find((comp) => comp.types.includes(type))?.long_name || "";
+
+                    const city = getComponent("administrative_area_level_2"); // ex: São Paulo
+                    const state = getComponent("administrative_area_level_1");
+                    const formattedAddress = results[0].formatted_address;
+
+                    setForm({
+                      ...form,
+                      address: formattedAddress,
+                      city: `${city} - ${state}`,
+                    });
+                  }
+                },
+                styles: {
+                  control: (base) => ({
+                    ...base,
+                    marginBottom: "0.5rem",
+                  }),
+                },
+              }}
+            />
+     
             {form.address && (
                 <input
                     className="form-control mb-2"
@@ -264,6 +297,19 @@ export default function LocadorDashboard() {
                     ))}
                 </div>
             )}
+
+            {tab === "editUser" && (
+              <div>
+                <h4>Editar Perfil</h4>
+                <EditUser
+                  userId={user.id}
+                  currentName={user.name}
+                  currentEmail={user.email}
+                  onUserUpdated={(updatedUser) => setUser(updatedUser)}
+                />
+              </div>
+            )}
+
         </div>
     </div>
   );

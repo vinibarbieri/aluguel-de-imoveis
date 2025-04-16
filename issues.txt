@@ -10,9 +10,10 @@
 
 
 1. Cadastro e gerenciamento de usuários e imóveis	2,0
-2. Implementação do sistema de reservas	2,0
-3. Validação correta de datas sem sobreposição	1,5
-4. Funcionalidade de avaliações	0,5
+2. Implementação do sistema de reservas	2,0 - OK
+3. Validação correta de datas sem sobreposição	1,5 - OK
+4. Funcionalidade de avaliações	0,5 - OK
 5. Organização do código (POO, estrutura, comentários)	1,0
+    - adicionar comentarios
 6. Funcionalidade de busca com filtros	1,0
 7. Diagrama de Classes UML completo	2,0

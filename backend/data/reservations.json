@@ -1,0 +1,26 @@
+[
+  {
+    "id": "2fa7dfac-e43c-4799-ad34-144b08575573",
+    "property_id": "207bb79f-7d10-4119-ac01-b21309f7c84f",
+    "renter_id": "7e9ad926-98ad-4e60-bd27-738011baac75",
+    "start_date": "2025-03-15",
+    "end_date": "2025-03-17",
+    "approved": true
+  },
+  {
+    "id": "f40759fe-6474-4a05-baaf-9b48d00fac91",
+    "property_id": "8612c949-7e55-446f-9dbc-569aea05c67d",
+    "renter_id": "7e9ad926-98ad-4e60-bd27-738011baac75",
+    "start_date": "2025-04-16",
+    "end_date": "2025-04-23",
+    "approved": null
+  },
+  {
+    "id": "258544a0-76b0-4d79-9272-0eb64c656518",
+    "property_id": "8612c949-7e55-446f-9dbc-569aea05c67d",
+    "renter_id": "7e9ad926-98ad-4e60-bd27-738011baac75",
+    "start_date": "2025-04-16",
+    "end_date": "2025-04-18",
+    "approved": null
+  }
+]

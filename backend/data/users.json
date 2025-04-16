@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Antonio",
+    "email": "a@a.com",
+    "user_type": "locador",
+    "id": "9920ac8c-8553-4e07-8fe0-ddc1cb73d1d6"
+  },
+  {
+    "name": "Bruno",
+    "email": "b@b.com",
+    "user_type": "locatario",
+    "id": "7e9ad926-98ad-4e60-bd27-738011baac75"
+  }
+]

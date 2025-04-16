@@ -1,11 +1,23 @@
-# backend/models/review.py
+class Review:
+    def __init__(self, id, reservation_id, rating, comment):
+        self.id = id
+        self.reservation_id = reservation_id
+        self.rating = rating
+        self.comment = comment
 
-from app import db
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "reservation_id": self.reservation_id,
+            "rating": self.rating,
+            "comment": self.comment
+        }
 
-class Review(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    reservation_id = db.Column(db.Integer, db.ForeignKey('reservation.id'), unique=True)
-    rating = db.Column(db.Integer)
-    comment = db.Column(db.Text)
-
-    reservation = db.relationship('Reservation', backref='review')
+    @staticmethod
+    def from_dict(data):
+        return Review(
+            id=data["id"],
+            reservation_id=data["reservation_id"],
+            rating=data["rating"],
+            comment=data["comment"]
+        )
