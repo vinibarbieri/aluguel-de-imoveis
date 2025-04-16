@@ -24,6 +24,7 @@ interface Reservation {
     start_date: string;
     end_date: string;
     approved: boolean | null;
+    average_rating?: number;
   }
   
 export default function LocadorDashboard() {
@@ -92,6 +93,7 @@ export default function LocadorDashboard() {
       available_from: "",
       available_until: "",
       image_url: "",
+      average_rating: null,
     });
 
     const handleEdit = (p: any) => {
@@ -104,6 +106,7 @@ export default function LocadorDashboard() {
           available_from: p.available_from,
           available_until: p.available_until,
           image_url: p.image_url || "",
+          average_rating: p.average_rating || null,
         });
         setTab("create");
       };
@@ -237,6 +240,7 @@ export default function LocadorDashboard() {
                 <h4>Reservas Recebidas</h4>
                 {reservations.length === 0 && <p>Nenhuma reserva ainda.</p>}
                 {reservations.map((r) => (
+                  console.log(r),
                     <div key={r.reservation_id} className="card mb-3">
                         <div className="card-body">
                             <p><strong>Imóvel ID:</strong> {r.property_id}</p>

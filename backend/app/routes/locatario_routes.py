@@ -55,10 +55,10 @@ def search_properties():
 
         # Calcula a média de avaliações
         reviews = [r.review for r in p.reservations if r.review]
-        avg_rating = (
+        avg_rating = round(
             round(sum(rv.rating for rv in reviews) / len(reviews), 1)
-            if reviews else None
-        )
+        ) if reviews else None
+
 
         result.append({
             'id': p.id,
@@ -126,10 +126,15 @@ def list_my_reservations(user_id):
     return jsonify([{
         'reservation_id': r.id,
         'property_id': r.property_id,
-        'property_title': r.property.title,
+        'property_title': r.property_listing.title,
         'start_date': r.start_date.isoformat(),
         'end_date': r.end_date.isoformat(),
-        'approved': r.approved
+        'approved': r.approved,
+        'image_url': r.property_listing.image_url,
+        'review': {
+            'rating': r.review.rating,
+            'comment': r.review.comment
+        } if r.review else None
     } for r in reservations])
 
 

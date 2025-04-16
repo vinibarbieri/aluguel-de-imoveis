@@ -12,12 +12,14 @@ interface Property {
   available_from: string;
   available_until: string;
   average_rating: number | null;
+  image_url?: string;
 }
 
 interface Reservation {
   reservation_id: number;
   property_id: number;
   property_title: string;
+  image_url?: string;
   start_date: string;
   end_date: string;
   approved: boolean | null;
@@ -75,6 +77,8 @@ export default function LocatarioDashboard() {
         return;
       }
 
+      console.log(propertyId)
+
       await axios.post("http://localhost:5000/api/locatario/reserve", {
         property_id: propertyId,
         renter_id: user.id,
@@ -109,9 +113,12 @@ export default function LocatarioDashboard() {
     }
   };
 
+  const futureReservations = reservations.filter((r) => new Date(r.end_date) > new Date());
+  const pastReservations = reservations.filter(r => new Date(r.end_date) < new Date());
+
   return (
     <div className="container mt-4">
-      <h2>Olá, {user.name} (Locatário)</h2>
+      <h2>Olá, {user.name}</h2>
       <button className="btn btn-outline-danger float-end" onClick={logout}>
         Sair
       </button>
@@ -128,6 +135,8 @@ export default function LocatarioDashboard() {
           </button>
         </li>
       </ul>
+
+
 
       <div className="mt-4">
         {tab === "buscar" && (
@@ -167,6 +176,7 @@ export default function LocatarioDashboard() {
               {results.length === 0 && <p>Nenhum imóvel encontrado.</p>}
               {results.map((p) => (
                 <div key={p.id} className="card mb-3">
+                  {p.image_url && <img src={p.image_url} alt="" className="card-img-top" style={{ maxHeight: "200px", objectFit: "cover" }} />}
                   <div className="card-body">
                     <h5 className="card-title">{p.title}</h5>
                     <p>{p.description}</p>
@@ -187,17 +197,31 @@ export default function LocatarioDashboard() {
 
         {tab === "reservas" && (
           <>
-            <h4>Minhas Reservas</h4>
-            {reservations.length === 0 && <p>Nenhuma reserva encontrada.</p>}
-            {reservations.map((r) => (
+            <h4>📅 Reservas Futuras</h4>
+            {futureReservations.length === 0 && <p>Nenhuma reserva futura.</p>}
+            {futureReservations.map((r) => (
               <div key={r.reservation_id} className="card mb-3">
+                {r.image_url && <img src={r.image_url} alt="" className="card-img-top" style={{ maxHeight: "200px", objectFit: "cover" }} />}
                 <div className="card-body">
-                  <h5>Imóvel: {r.property_title}</h5>
-                  <p>Período: {r.start_date} até {r.end_date}</p>
+                  <h5>{r.property_title}</h5>
+                  <p>De {r.start_date} até {r.end_date}</p>
+                  <p>Status: {r.approved === null ? "Pendente" : r.approved ? "Aprovada" : "Recusada"}</p>
+                </div>
+              </div>
+            ))}
+
+            <h4 className="mt-4">✅ Reservas Concluídas</h4>
+            {pastReservations.length === 0 && <p>Nenhuma reserva passada.</p>}
+            {pastReservations.map((r) => (
+              <div key={r.reservation_id} className="card mb-3">
+                {r.image_url && <img src={r.image_url} alt="" className="card-img-top" style={{ maxHeight: "200px", objectFit: "cover" }} />}
+                <div className="card-body">
+                  <h5>{r.property_title}</h5>
+                  <p>De {r.start_date} até {r.end_date}</p>
                   <p>Status: {r.approved === null ? "Pendente" : r.approved ? "Aprovada" : "Recusada"}</p>
 
-                  {/* Se já passou a estadia e não foi avaliado */}
-                  {r.approved && !r.review && new Date(r.end_date) < new Date() && (
+                  {/* Se ainda não avaliou e foi aprovada */}
+                  {r.approved && !r.review && (
                     <>
                       <h6 className="mt-3">Avaliar imóvel:</h6>
                       <input
@@ -235,7 +259,7 @@ export default function LocatarioDashboard() {
             ))}
           </>
         )}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }

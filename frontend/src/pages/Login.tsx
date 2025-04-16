@@ -1,10 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -12,7 +11,10 @@ export default function Login() {
       const user = res.data.user;
       localStorage.setItem("user", JSON.stringify(user));
       alert(`Bem-vindo, ${user.name}!`);
-      navigate("/dashboard"); // redireciona para rota protegida
+
+      // ✅ Recarrega o app com o usuário já salvo
+      window.location.href = "/dashboard";
+
     } catch (err: any) {
       alert(err.response?.data?.error || "Erro no login");
     }

@@ -7,9 +7,11 @@ class Reservation(db.Model):
     renter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
-    approved = db.Column(db.Boolean, default=False)
+    approved = db.Column(db.Boolean, default=None)
     
     renter = db.relationship('User', backref='reservations', lazy=True)
+    review = db.relationship("Review", backref="reservation", uselist=False)
+
 
     def __repr__(self):
         return f'<Reservation {self.id}>'

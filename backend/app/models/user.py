@@ -1,9 +1,13 @@
-# backend/models/user.py
+class User:
+    def __init__(self, id, name, email, user_type):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.user_type = user_type
 
-from app import db
+    def to_dict(self):
+        return vars(self)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    user_type = db.Column(db.String(20), nullable=False)  # locador ou locatario
+    @staticmethod
+    def from_dict(data):
+        return User(**data)
